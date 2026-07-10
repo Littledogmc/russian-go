@@ -1,19 +1,19 @@
 /*
- * 核对答案请求 DTO
- * 前端提交用户输入的俄文答案时使用
+ * Check-answer request DTO.
+ * Carries the word ID and the user's typed answer from the frontend.
  */
 package com.russtudy.dto;
 
 public class CheckAnswerRequest {
 
-    private Long wordId;         // 当前检测的单词 ID
-    private String userAnswer;   // 用户输入的俄文
+	private Long wordId;
+	private String userAnswer;
 
-    public CheckAnswerRequest() {}
+	public CheckAnswerRequest() {}
 
-    public Long getWordId() { return wordId; }
-    public void setWordId(Long wordId) { this.wordId = wordId; }
+	public Long getWordId() { return wordId; }
+	public void setWordId(Long wordId) { this.wordId = wordId; }
 
-    public String getUserAnswer() { return userAnswer; }
-    public void setUserAnswer(String userAnswer) { this.userAnswer = userAnswer; }
+	public String getUserAnswer() { return userAnswer; }
+	public void setUserAnswer(String userAnswer) { this.userAnswer = userAnswer; }
 }

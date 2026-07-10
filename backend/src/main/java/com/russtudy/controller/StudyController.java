@@ -1,24 +1,26 @@
 /*
- * 背诵检测 REST 控制器（Redis 版）
- * 提供 6 个 API：词书列表、随机抽词、核对答案、完成检测、活动/错词榜
+ * Study controller.
+ * All study endpoints require a valid JWT in the Authorization header.
+ * The userId is extracted from the token and passed to StudyService for data isolation.
  */
 package com.russtudy.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.russtudy.dto.ActivityRecord;
+import com.russtudy.config.JwtUtil;
 import com.russtudy.dto.CheckAnswerRequest;
-import com.russtudy.dto.CheckAnswerResponse;
-import com.russtudy.dto.ErrorWordRecord;
 import com.russtudy.dto.FinishSessionRequest;
 import com.russtudy.dto.PickWordRequest;
 import com.russtudy.dto.PickWordResponse;
@@ -30,82 +32,121 @@ import com.russtudy.service.StudyService;
 @CrossOrigin(origins = "*")
 public class StudyController {
 
-    private final StudyService studyService;
+	private final StudyService studyService;
+	private final JwtUtil jwtUtil;
 
-    public StudyController(StudyService studyService) {
-        this.studyService = studyService;
-    }
+	public StudyController(StudyService studyService, JwtUtil jwtUtil) {
+		this.studyService = studyService;
+		this.jwtUtil = jwtUtil;
+	}
 
-    /*
-     * GET /api/wordbooks
-     * 获取所有站点内置词书的列表（从 Redis 读取）
-     */
-    @GetMapping("/wordbooks")
-    public List<WordbookResponse> getWordbooks() {
-        return studyService.getWordbooks()
-                .stream()
-                .map(wb -> new WordbookResponse(wb.getId(), wb.getName(), wb.getWordCount()))
-                .toList();
-    }
+	private Long extractUserId(String authHeader) {
+		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			throw new RuntimeException("Missing or invalid token");
+		}
+		String token = authHeader.substring(7);
+		if (!jwtUtil.isValid(token)) {
+			throw new RuntimeException("Invalid or expired token");
+		}
+		return jwtUtil.getUserId(token);
+	}
 
-    /*
-     * POST /api/study/pick
-     * 从指定词书中随机抽取一个未答对的单词
-     */
-    @PostMapping("/study/pick")
-    public ResponseEntity<PickWordResponse> pickWord(@RequestBody PickWordRequest request) {
-        PickWordResponse result = studyService.pickWord(request.getWordbookId());
-        if (result == null) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(result);
-    }
+	@GetMapping("/wordbooks")
+	public List<WordbookResponse> getWordbooks() {
+		return studyService.getWordbooks()
+			.stream()
+			.map(wb -> new WordbookResponse(wb.getId(), wb.getName(), wb.getWordCount()))
+			.toList();
+	}
 
-    /*
-     * POST /api/study/check
-     * 核对用户输入的答案
-     */
-    @PostMapping("/study/check")
-    public CheckAnswerResponse checkAnswer(@RequestBody CheckAnswerRequest request) {
-        return studyService.checkAnswer(request);
-    }
+	@PostMapping("/study/pick")
+	public ResponseEntity<?> pickWord(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestBody PickWordRequest req
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			PickWordResponse result = studyService.pickWord(userId, req.getWordbookId());
+			if (result == null) {
+				return ResponseEntity.noContent().build();
+			}
+			return ResponseEntity.ok(result);
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
 
-    /*
-     * POST /api/study/finish
-     * 结束本轮检测，记录活动到 Redis
-     */
-    @PostMapping("/study/finish")
-    public void finishSession(@RequestBody FinishSessionRequest request) {
-        studyService.finishSession(
-                request.getWordbookId(), request.getWordbookName(),
-                request.getTotal(), request.getCorrect()
-        );
-    }
+	@PostMapping("/study/check")
+	public ResponseEntity<?> checkAnswer(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestBody CheckAnswerRequest req
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			return ResponseEntity.ok(studyService.checkAnswer(userId, req));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
 
-    /*
-     * POST /api/study/reset
-     * 重置本轮检测状态
-     */
-    @PostMapping("/study/reset")
-    public void reset() {
-        studyService.reset();
-    }
+	@PostMapping("/study/finish")
+	public ResponseEntity<?> finishSession(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestBody FinishSessionRequest req
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			studyService.finishSession(userId, req.getWordbookId(), req.getWordbookName(),
+				req.getTotal(), req.getCorrect());
+			return ResponseEntity.ok().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
 
-    /*
-     * GET /api/study/activities?limit=5
-     * 获取近期测试活动
-     */
-    @GetMapping("/study/activities")
-    public List<ActivityRecord> getActivities(@RequestParam(defaultValue = "5") int limit) {
-        return studyService.getRecentActivities(limit);
-    }
+	@PostMapping("/study/reset")
+	public ResponseEntity<?> reset(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestBody PickWordRequest req
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			studyService.resetForUser(userId, req.getWordbookId());
+			return ResponseEntity.ok().build();
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
 
-    /*
-     * GET /api/study/errors?limit=5
-     * 获取高频错词榜
-     */
-    @GetMapping("/study/errors")
-    public List<ErrorWordRecord> getErrors(@RequestParam(defaultValue = "5") int limit) {
-        return studyService.getErrorWords(limit);
-    }
+	@GetMapping("/study/activities")
+	public ResponseEntity<?> getActivities(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestParam(defaultValue = "5") int limit
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			return ResponseEntity.ok(studyService.getRecentActivities(userId, limit));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	@GetMapping("/study/errors")
+	public ResponseEntity<?> getErrors(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestParam(defaultValue = "5") int limit
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			return ResponseEntity.ok(studyService.getErrorWords(userId, limit));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
 }

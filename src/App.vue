@@ -1,13 +1,15 @@
 <script setup lang="ts">
 /*
  * App shell.
- * Sticky navbar with navigation links and a dark-mode toggle.
+ * Sticky navbar with navigation links, dark-mode toggle, and auth controls.
  * Theme preference persisted in localStorage.
  */
 import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 interface NavItem {
   path: string
@@ -33,6 +35,10 @@ function toggleTheme(): void {
   isDark.value = !isDark.value
   localStorage.setItem('russian-go-theme', isDark.value ? 'dark' : 'light')
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+}
+
+function doLogout(): void {
+  authStore.logout()
 }
 
 onMounted(() => {
@@ -65,6 +71,21 @@ onMounted(() => {
       </div>
 
       <div class="oj-navbar__right">
+        <!-- Auth controls -->
+        <template v-if="authStore.isLoggedIn">
+          <span
+            class="oj-navbar__link"
+            style="cursor: default; font-size: 13px; color: var(--oj-text-secondary)"
+          >
+            {{ authStore.username }}
+          </span>
+          <button class="oj-btn oj-btn--sm oj-btn--outline" @click="doLogout">登出</button>
+        </template>
+        <template v-else>
+          <RouterLink to="/login" class="oj-btn oj-btn--sm oj-btn--outline">登录</RouterLink>
+          <RouterLink to="/register" class="oj-btn oj-btn--sm oj-btn--primary">注册</RouterLink>
+        </template>
+
         <button
           class="oj-navbar__theme-btn"
           :title="isDark ? '切换日间模式' : '切换夜间模式'"
