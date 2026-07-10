@@ -1,8 +1,10 @@
 @import './base.css';
 
-/* ========== OJ Style Theme ========== */
+/* ========== OJ Style Theme — Light & Dark ========== */
 
-:root {
+/* Light mode (default) */
+:root,
+[data-theme='light'] {
   --oj-bg: #f5f5f5;
   --oj-nav-bg: #ffffff;
   --oj-nav-border: #e0e0e0;
@@ -18,6 +20,54 @@
   --oj-text-muted: #999999;
   --oj-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   --oj-radius: 6px;
+  --oj-badge-success-bg: #e8f5e9;
+  --oj-badge-success-text: #2e7d32;
+  --oj-badge-danger-bg: #fbe9e7;
+  --oj-badge-danger-text: #c62828;
+  --oj-badge-warning-bg: #fff8e1;
+  --oj-badge-warning-text: #f57f17;
+  --oj-badge-info-bg: #e3f2fd;
+  --oj-badge-info-text: #1565c0;
+  --oj-table-hover: #fafafa;
+  --oj-nav-link-hover: #f0f0f0;
+  --oj-nav-link-active-bg: #e8f0fe;
+  --oj-input-bg: #ffffff;
+  --oj-result-correct-bg: #e8f5e9;
+  --oj-result-wrong-bg: #fbe9e7;
+  --oj-stat-item-bg: #f5f5f5;
+}
+
+/* Dark mode */
+[data-theme='dark'] {
+  --oj-bg: #1a1a2e;
+  --oj-nav-bg: #16213e;
+  --oj-nav-border: #0f3460;
+  --oj-card-bg: #16213e;
+  --oj-card-border: #0f3460;
+  --oj-primary: #64b5f6;
+  --oj-primary-hover: #42a5f5;
+  --oj-success: #66bb6a;
+  --oj-danger: #ef5350;
+  --oj-warning: #ffa726;
+  --oj-text: #e0e0e0;
+  --oj-text-secondary: #b0b0b0;
+  --oj-text-muted: #808080;
+  --oj-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --oj-badge-success-bg: #1b5e20;
+  --oj-badge-success-text: #a5d6a7;
+  --oj-badge-danger-bg: #b71c1c;
+  --oj-badge-danger-text: #ef9a9a;
+  --oj-badge-warning-bg: #e65100;
+  --oj-badge-warning-text: #ffcc80;
+  --oj-badge-info-bg: #0d47a1;
+  --oj-badge-info-text: #90caf9;
+  --oj-table-hover: #1a1a2e;
+  --oj-nav-link-hover: #0f3460;
+  --oj-nav-link-active-bg: #1a237e;
+  --oj-input-bg: #0f3460;
+  --oj-result-correct-bg: #1b5e20;
+  --oj-result-wrong-bg: #b71c1c;
+  --oj-stat-item-bg: #0f3460;
   --oj-font:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
@@ -38,6 +88,9 @@ body {
   font-family: var(--oj-font);
   font-size: 14px;
   line-height: 1.6;
+  transition:
+    background 0.3s,
+    color 0.3s;
 }
 
 #app {
@@ -97,12 +150,12 @@ body {
 }
 
 .oj-navbar__link:hover {
-  background: #f0f0f0;
+  background: var(--oj-nav-link-hover);
   color: var(--oj-text);
 }
 
 .oj-navbar__link--active {
-  background: #e8f0fe;
+  background: var(--oj-nav-link-active-bg);
   color: var(--oj-primary);
 }
 
@@ -141,6 +194,9 @@ body {
   border: 1px solid var(--oj-card-border);
   border-radius: var(--oj-radius);
   box-shadow: var(--oj-shadow);
+  transition:
+    background 0.3s,
+    border-color 0.3s;
 }
 
 .oj-card__header {
@@ -251,7 +307,7 @@ body {
 }
 
 .oj-table tr:hover td {
-  background: #fafafa;
+  background: var(--oj-table-hover);
 }
 
 /* ========== Badge / Tag ========== */
@@ -265,23 +321,23 @@ body {
 }
 
 .oj-badge--success {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--oj-badge-success-bg);
+  color: var(--oj-badge-success-text);
 }
 
 .oj-badge--danger {
-  background: #fbe9e7;
-  color: #c62828;
+  background: var(--oj-badge-danger-bg);
+  color: var(--oj-badge-danger-text);
 }
 
 .oj-badge--warning {
-  background: #fff8e1;
-  color: #f57f17;
+  background: var(--oj-badge-warning-bg);
+  color: var(--oj-badge-warning-text);
 }
 
 .oj-badge--info {
-  background: #e3f2fd;
-  color: #1565c0;
+  background: var(--oj-badge-info-bg);
+  color: var(--oj-badge-info-text);
 }
 
 /* ========== Status ========== */

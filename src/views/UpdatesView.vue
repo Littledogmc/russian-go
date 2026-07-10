@@ -49,7 +49,7 @@ const updates: UpdateItem[] = [
   <div class="updates-page">
     <div class="oj-page-header">
       <h1>📋 更新日志</h1>
-      <p class="text-secondary">记录 RussianGo 的每一个版本变化</p>
+      <p class="text-secondary">展示了近期的更新内容</p>
     </div>
 
     <div v-for="upd in updates" :key="upd.version" class="oj-card mb-6">
