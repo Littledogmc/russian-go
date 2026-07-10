@@ -1,18 +1,22 @@
 <script setup lang="ts">
+/*
+ * Statistics page.
+ * Displays current session results and wrong-word review list.
+ */
 import { useRouter } from 'vue-router'
 import { useStudyStore } from '@/stores/study'
 
 const router = useRouter()
 const store = useStudyStore()
 
-function goStudy() {
+function goStudy(): void {
   router.push('/study')
 }
 </script>
 
 <template>
   <div class="statistics-page">
-    <!-- 本轮检测结果 -->
+    <!-- Session stats -->
     <div class="oj-card mb-6">
       <div class="oj-card__header">
         <h3>📊 本轮检测结果</h3>
@@ -56,16 +60,16 @@ function goStudy() {
       </div>
     </div>
 
-    <!-- 错词回顾 -->
+    <!-- Wrong word review -->
     <div class="oj-card">
       <div class="oj-card__header">
         <h3>❌ 本轮错词回顾</h3>
-        <span class="oj-badge oj-badge--danger" v-if="store.wrongWords.length > 0">
-          {{ store.wrongWords.length }} 词
+        <span class="oj-badge oj-badge--danger" v-if="store.lsWrongWords.length > 0">
+          {{ store.lsWrongWords.length }} 词
         </span>
       </div>
       <div class="oj-card__body" style="padding: 0">
-        <table class="oj-table" v-if="store.wrongWords.length > 0">
+        <table class="oj-table" v-if="store.lsWrongWords.length > 0">
           <thead>
             <tr>
               <th>#</th>
@@ -75,7 +79,7 @@ function goStudy() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in store.wrongWords" :key="item.wordId">
+            <tr v-for="(item, index) in store.lsWrongWords" :key="item.wordId">
               <td class="text-muted" style="font-size: 13px; width: 32px">{{ index + 1 }}</td>
               <td style="font-weight: 600; font-family: 'Segoe UI', 'Times New Roman', serif">
                 {{ item.russian }}
@@ -87,7 +91,7 @@ function goStudy() {
             </tr>
           </tbody>
         </table>
-        <div v-else style="padding: 40px 20px; text-align: center; color: var(--oj-text-muted)">
+        <div v-else class="empty-state">
           <p style="font-size: 36px; margin-bottom: 12px">🎉</p>
           <p>本轮没有错词，继续保持！</p>
         </div>
@@ -112,7 +116,7 @@ function goStudy() {
   text-align: center;
   padding: 20px 12px;
   border-radius: var(--oj-radius);
-  background: var(--oj-bg);
+  background: var(--oj-stat-item-bg);
 }
 
 .stat-value {
@@ -135,6 +139,12 @@ function goStudy() {
 
 .stat-wrong .stat-value {
   color: var(--oj-danger);
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--oj-text-muted);
 }
 
 @media (max-width: 500px) {

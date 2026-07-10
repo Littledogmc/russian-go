@@ -23,12 +23,11 @@ import com.russtudy.dto.FinishSessionRequest;
 import com.russtudy.dto.PickWordRequest;
 import com.russtudy.dto.PickWordResponse;
 import com.russtudy.dto.WordbookResponse;
-import com.russtudy.model.Wordbook;
 import com.russtudy.service.StudyService;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class StudyController {
 
     private final StudyService studyService;

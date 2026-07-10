@@ -1,54 +1,61 @@
 <script setup lang="ts">
+/*
+ * Home page.
+ * Shows welcome banner, recent activity, error leaderboard, and built-in wordbook list.
+ */
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchWordbooks } from '@/api/wordbook'
-import { fetchActivities, fetchErrorWords } from '@/api/study'
+import { getWordbooks } from '@/api/wordbook'
+import { getActivities, getErrorWords } from '@/api/study'
 import type { WordbookSummary, ActivityRecord, ErrorWord } from '@/types'
 
 const router = useRouter()
 
-const wordbooks = ref<WordbookSummary[]>([])
-const recentActivities = ref<ActivityRecord[]>([])
-const errorWords = ref<ErrorWord[]>([])
-const loading = ref(true)
+const lsWordbooks = ref<WordbookSummary[]>([])
+const lsActivities = ref<ActivityRecord[]>([])
+const lsErrorWords = ref<ErrorWord[]>([])
+const isLoading = ref(true)
 
-const accuracy = (correct: number, total: number) => {
+function calcAccuracy(correct: number, total: number): number {
   if (total === 0) return 0
   return Math.round((correct / total) * 100)
 }
 
-const goStudy = () => router.push('/study')
-const goStatistics = () => router.push('/statistics')
-const startStudy = (wordbookId: number) => {
+function goStudy(): void {
+  router.push('/study')
+}
+
+function goStatistics(): void {
+  router.push('/statistics')
+}
+
+function startStudy(wordbookId: number): void {
   router.push({ path: '/study', query: { wordbookId } })
 }
 
 onMounted(async () => {
   try {
-    const [wb, acts, errs] = await Promise.all([
-      fetchWordbooks(),
-      fetchActivities(5),
-      fetchErrorWords(5),
-    ])
-    wordbooks.value = wb
-    recentActivities.value = acts
-    errorWords.value = errs
+    const [wb, acts, errs] = await Promise.all([getWordbooks(), getActivities(5), getErrorWords(5)])
+    lsWordbooks.value = wb
+    lsActivities.value = acts
+    lsErrorWords.value = errs
   } catch {
-    // 后端未启动时静默
+    // Silently fail when backend is not running
   } finally {
-    loading.value = false
+    isLoading.value = false
   }
 })
 </script>
 
 <template>
   <div class="home">
+    <!-- Welcome banner -->
     <div class="oj-card mb-6">
       <div class="welcome-banner">
         <div class="welcome-banner__text">
           <h1>你好！今天想学点什么？</h1>
           <p class="text-secondary mt-2">
-            站点已内置 <strong>{{ wordbooks.length }}</strong> 本词书
+            站点已内置 <strong>{{ lsWordbooks.length }}</strong> 本词书
           </p>
         </div>
         <div class="welcome-banner__actions">
@@ -61,7 +68,7 @@ onMounted(async () => {
     </div>
 
     <div class="oj-grid oj-grid--2 mb-6">
-      <!-- 左侧：近期测试活动 -->
+      <!-- Recent activity -->
       <div class="oj-card">
         <div class="oj-card__header">
           <h3>📋 近期测试活动</h3>
@@ -70,7 +77,7 @@ onMounted(async () => {
           >
         </div>
         <div class="oj-card__body" style="padding: 0">
-          <table class="oj-table" v-if="!loading && recentActivities.length > 0">
+          <table class="oj-table" v-if="!isLoading && lsActivities.length > 0">
             <thead>
               <tr>
                 <th>词书</th>
@@ -80,7 +87,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="act in recentActivities" :key="act.id">
+              <tr v-for="act in lsActivities" :key="act.id">
                 <td style="color: var(--oj-primary); font-weight: 500">{{ act.wordbook }}</td>
                 <td>
                   <span class="oj-status">
@@ -92,42 +99,37 @@ onMounted(async () => {
                   <span
                     class="oj-badge"
                     :class="
-                      accuracy(act.correct, act.wordCount) >= 80
+                      calcAccuracy(act.correct, act.wordCount) >= 80
                         ? 'oj-badge--success'
                         : 'oj-badge--warning'
                     "
                   >
-                    {{ accuracy(act.correct, act.wordCount) }}%
+                    {{ calcAccuracy(act.correct, act.wordCount) }}%
                   </span>
                 </td>
                 <td class="text-muted" style="font-size: 13px">{{ act.date }}</td>
               </tr>
             </tbody>
           </table>
-          <div
-            v-else-if="!loading"
-            style="padding: 40px 20px; text-align: center; color: var(--oj-text-muted)"
-          >
+          <div v-else-if="!isLoading" class="empty-state">
             <p style="font-size: 32px; margin-bottom: 12px">📝</p>
             <p>还没有测试记录</p>
             <button class="oj-btn oj-btn--primary mt-4" @click="goStudy">开始第一次检测</button>
           </div>
-          <div v-else style="padding: 40px 20px; text-align: center; color: var(--oj-text-muted)">
-            <p>加载中...</p>
-          </div>
+          <div v-else class="empty-state"><p>加载中...</p></div>
         </div>
       </div>
 
-      <!-- 右侧：高频错词榜 -->
+      <!-- Error leaderboard -->
       <div class="oj-card">
         <div class="oj-card__header">
           <h3>❌ 高频错词榜</h3>
-          <span class="oj-badge oj-badge--danger" v-if="errorWords.length > 0"
-            >{{ errorWords.length }} 词需巩固</span
+          <span class="oj-badge oj-badge--danger" v-if="lsErrorWords.length > 0"
+            >{{ lsErrorWords.length }} 词需巩固</span
           >
         </div>
         <div class="oj-card__body" style="padding: 0">
-          <table class="oj-table" v-if="!loading && errorWords.length > 0">
+          <table class="oj-table" v-if="!isLoading && lsErrorWords.length > 0">
             <thead>
               <tr>
                 <th style="width: 32px">#</th>
@@ -137,7 +139,7 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(word, index) in errorWords" :key="word.id">
+              <tr v-for="(word, index) in lsErrorWords" :key="word.id">
                 <td class="text-muted" style="font-size: 13px">{{ index + 1 }}</td>
                 <td style="font-weight: 600; font-family: 'Segoe UI', 'Times New Roman', serif">
                   {{ word.russian }}
@@ -154,30 +156,25 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
-          <div
-            v-else-if="!loading"
-            style="padding: 40px 20px; text-align: center; color: var(--oj-text-muted)"
-          >
+          <div v-else-if="!isLoading" class="empty-state">
             <p style="font-size: 32px; margin-bottom: 12px">🎉</p>
             <p>暂无错词记录</p>
           </div>
-          <div v-else style="padding: 40px 20px; text-align: center; color: var(--oj-text-muted)">
-            <p>加载中...</p>
-          </div>
+          <div v-else class="empty-state"><p>加载中...</p></div>
         </div>
       </div>
     </div>
 
-    <!-- 下方：站点内置词书 -->
+    <!-- Built-in wordbook list -->
     <div class="oj-card">
       <div class="oj-card__header">
         <h3>📚 选择词书</h3>
         <span style="font-size: 13px; color: var(--oj-text-muted)"
-          >站点内置共 {{ wordbooks.length }} 本</span
+          >站点内置共 {{ lsWordbooks.length }} 本</span
         >
       </div>
       <div class="oj-card__body" style="padding: 0">
-        <table class="oj-table" v-if="!loading && wordbooks.length > 0">
+        <table class="oj-table" v-if="!isLoading && lsWordbooks.length > 0">
           <thead>
             <tr>
               <th>词书名称</th>
@@ -186,7 +183,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="wb in wordbooks" :key="wb.id">
+            <tr v-for="wb in lsWordbooks" :key="wb.id">
               <td style="font-weight: 500">{{ wb.name }}</td>
               <td class="text-secondary">{{ wb.wordCount }} 词</td>
               <td style="text-align: right">
@@ -197,19 +194,15 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
-        <div
-          v-else-if="!loading"
-          style="padding: 60px 20px; text-align: center; color: var(--oj-text-muted)"
-        >
+        <div v-else-if="!isLoading" class="empty-state">
           <p style="font-size: 40px; margin-bottom: 16px">📖</p>
           <p style="font-size: 16px">暂无词书，请先启动后端服务</p>
         </div>
-        <div v-else style="padding: 60px 20px; text-align: center; color: var(--oj-text-muted)">
-          <p>加载中...</p>
-        </div>
+        <div v-else class="empty-state"><p>加载中...</p></div>
       </div>
     </div>
-    <!-- 底部：关于界面 -->
+
+    <!-- Footer -->
     <div class="text-center text-muted" style="padding: 30px 0">
       <p>Copyright (C) Broadwell 2026. All rights reserved.</p>
       <p>For educational purposes only - Do not distribute!</p>
@@ -239,5 +232,10 @@ onMounted(async () => {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--oj-text-muted);
 }
 </style>

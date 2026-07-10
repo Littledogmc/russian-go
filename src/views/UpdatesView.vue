@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /*
- * 更新日志页面
- * 展示项目的版本迭代记录
+ * Updates / changelog page.
+ * Displays version history in reverse chronological order.
  */
 
 interface UpdateItem {
@@ -10,19 +10,17 @@ interface UpdateItem {
   items: string[]
 }
 
-const updates: UpdateItem[] = [
+const lsUpdates: UpdateItem[] = [
   {
     version: 'build 3',
     date: '2026-07-10',
     items: ['Backend rework with Redis integration for improved performance.'],
   },
-
   {
     version: 'build 2',
     date: '2026-07-09',
     items: ['Implemented new methods.'],
   },
-
   {
     version: 'build 1',
     date: '2026-07-08',
@@ -34,15 +32,6 @@ const updates: UpdateItem[] = [
     ],
   },
 ]
-
-// 后续版本在此追加
-// {
-//   version: 'v1.1.0',
-//   date: '2026-xx-xx',
-//   items: [
-//     '...',
-//   ],
-// },
 </script>
 
 <template>
@@ -52,7 +41,7 @@ const updates: UpdateItem[] = [
       <p class="text-secondary">展示了近期的更新内容</p>
     </div>
 
-    <div v-for="upd in updates" :key="upd.version" class="oj-card mb-6">
+    <div v-for="upd in lsUpdates" :key="upd.version" class="oj-card mb-6">
       <div class="oj-card__header">
         <h3>
           {{ upd.version }}

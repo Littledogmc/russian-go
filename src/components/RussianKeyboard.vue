@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /*
- * 俄语虚拟键盘组件
- * 标准 ЙЦУКЕН 布局，支持大小写、退格、回车
+ * Russian virtual keyboard component.
+ * Standard ЙЦУКЕН layout with 4 rows. Emits keystrokes to parent.
  */
 defineProps<{
   disabled: boolean
@@ -13,81 +13,80 @@ const emit = defineEmits<{
   enter: []
 }>()
 
-// 键盘行定义（小写）
 const rows = [
   ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'],
   ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'],
   ['я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', '.'],
 ] as const
 
-function handleKey(key: string) {
+function pressKey(key: string): void {
   emit('input', key)
 }
 
-function handleBackspace() {
+function pressBackspace(): void {
   emit('backspace')
 }
 
-function handleEnter() {
+function pressEnter(): void {
   emit('enter')
 }
 </script>
 
 <template>
   <div class="rus-keyboard" :class="{ 'rus-keyboard--disabled': disabled }">
-    <!-- 第1行 -->
+    <!-- Row 1 -->
     <div class="rus-keyboard__row">
       <button
         v-for="key in rows[0]"
         :key="key"
         class="rus-key rus-key--letter"
         :disabled="disabled"
-        @click="handleKey(key)"
+        @click="pressKey(key)"
       >
         {{ key }}
       </button>
-      <button class="rus-key rus-key--special" :disabled="disabled" @click="handleBackspace">
+      <button class="rus-key rus-key--special" :disabled="disabled" @click="pressBackspace">
         ⌫
       </button>
     </div>
 
-    <!-- 第2行 -->
+    <!-- Row 2 -->
     <div class="rus-keyboard__row">
       <button
         v-for="key in rows[1]"
         :key="key"
         class="rus-key rus-key--letter"
         :disabled="disabled"
-        @click="handleKey(key)"
+        @click="pressKey(key)"
       >
         {{ key }}
       </button>
-      <button class="rus-key rus-key--special" :disabled="disabled" @click="handleEnter">↵</button>
+      <button class="rus-key rus-key--special" :disabled="disabled" @click="pressEnter">↵</button>
     </div>
 
-    <!-- 第3行 + 底部控制区 -->
+    <!-- Row 3 -->
     <div class="rus-keyboard__row">
       <button
         v-for="key in rows[2]"
         :key="key"
         class="rus-key rus-key--letter"
         :disabled="disabled"
-        @click="handleKey(key)"
+        @click="pressKey(key)"
       >
         {{ key }}
       </button>
-      <button class="rus-key rus-key--special" :disabled="disabled" @click="handleBackspace">
+      <button class="rus-key rus-key--special" :disabled="disabled" @click="pressBackspace">
         ⌫
       </button>
     </div>
 
-    <!-- 底部行：空格 + 回车 -->
+    <!-- Bottom row: space + enter -->
     <div class="rus-keyboard__row rus-keyboard__row--bottom">
-      <button class="rus-key rus-key--space" :disabled="disabled" @click="handleKey(' ')">
-        空格
+      <button class="rus-key rus-key--space" :disabled="disabled" @click="pressKey(' ')">
+        Space
       </button>
-      <button class="rus-key rus-key--enter" :disabled="disabled" @click="handleEnter">
-        ↵ 回车
+      <button class="rus-key rus-key--enter" :disabled="disabled" @click="pressEnter">
+        ↵ Enter
       </button>
     </div>
   </div>

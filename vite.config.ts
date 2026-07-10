@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: ['.luyouxia.net'],
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

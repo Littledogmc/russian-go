@@ -1,25 +1,35 @@
 <script setup lang="ts">
+/*
+ * App shell.
+ * Sticky navbar with navigation links and a dark-mode toggle.
+ * Theme preference persisted in localStorage.
+ */
 import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 const route = useRoute()
 
-const navLinks = [
+interface NavItem {
+  path: string
+  name: string
+  label: string
+}
+
+const lsNavLinks: NavItem[] = [
   { path: '/', name: 'home', label: '首页' },
   { path: '/study', name: 'study', label: '开始检测' },
   { path: '/statistics', name: 'statistics', label: '学习统计' },
   { path: '/updates', name: 'updates', label: '更新日志' },
 ]
 
-const isActive = (path: string) => {
+function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
 }
 
-// ===== 夜间模式 =====
 const isDark = ref(false)
 
-function toggleTheme() {
+function toggleTheme(): void {
   isDark.value = !isDark.value
   localStorage.setItem('russian-go-theme', isDark.value ? 'dark' : 'light')
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
@@ -44,7 +54,7 @@ onMounted(() => {
 
       <div class="oj-navbar__links">
         <RouterLink
-          v-for="link in navLinks"
+          v-for="link in lsNavLinks"
           :key="link.path"
           :to="link.path"
           class="oj-navbar__link"

@@ -1,16 +1,16 @@
 /*
- * 全局 TypeScript 类型定义
- * 与后端 DTO 一一对应
+ * Global type definitions.
+ * Mirrors backend DTOs for API responses.
  */
 
-// 词书摘要（GET /api/wordbooks 返回）
+// Wordbook summary returned by GET /api/wordbooks
 export interface WordbookSummary {
   id: number
   name: string
   wordCount: number
 }
 
-// 随机抽词响应（POST /api/study/pick 返回）
+// Single word picked for dictation from POST /api/study/pick
 export interface PickWordResult {
   wordId: number
   russian: string
@@ -18,13 +18,13 @@ export interface PickWordResult {
   english?: string
 }
 
-// 核对答案响应（POST /api/study/check 返回）
+// Answer check result from POST /api/study/check
 export interface CheckAnswerResult {
-  correct: boolean
+  isCorrect: boolean
   correctAnswer: string
 }
 
-// 测试活动记录
+// Activity record for recent study sessions
 export interface ActivityRecord {
   id: number
   wordbook: string
@@ -34,7 +34,7 @@ export interface ActivityRecord {
   duration: string
 }
 
-// 错词条目
+// Error word entry for the error leaderboard
 export interface ErrorWord {
   id: number
   russian: string

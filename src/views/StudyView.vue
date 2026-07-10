@@ -1,8 +1,13 @@
 <script setup lang="ts">
+/*
+ * Study page.
+ * Wordbook selection -> random word dictation -> answer check -> next word.
+ * Supports virtual Russian keyboard and keyboard shortcut (Enter).
+ */
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { pickWord, checkAnswer, resetSession, finishSession } from '@/api/study'
-import { fetchWordbooks } from '@/api/wordbook'
+import { getWordbooks } from '@/api/wordbook'
 import { useStudyStore } from '@/stores/study'
 import type { PickWordResult } from '@/types'
 import RussianKeyboard from '@/components/RussianKeyboard.vue'
@@ -15,27 +20,25 @@ const currentWord = ref<PickWordResult | null>(null)
 const userInput = ref('')
 const resultMsg = ref('')
 const resultCorrect = ref<boolean | null>(null)
-const showNextBtn = ref(false)
-const allDone = ref(false)
-const wordbooks = ref<{ id: number; name: string }[]>([])
+const isShowNext = ref(false)
+const isAllDone = ref(false)
+const lsWordbooks = ref<{ id: number; name: string }[]>([])
 const selectedWordbookId = ref<number | null>(null)
-const showKeyboard = ref(false)
+const isShowKeyboard = ref(false)
 
-// 读取 URL 参数 wordbookId
 onMounted(async () => {
   const qParam = route.query.wordbookId
   if (typeof qParam === 'string') {
     selectedWordbookId.value = Number(qParam)
   }
-  // 加载词书列表（供选择）
   try {
-    const wb = await fetchWordbooks()
-    wordbooks.value = wb
+    const wb = await getWordbooks()
+    lsWordbooks.value = wb
     if (!selectedWordbookId.value && wb.length > 0) {
       selectedWordbookId.value = wb[0]!.id
     }
   } catch {
-    // 静默
+    // Backend not available
   }
   if (selectedWordbookId.value != null) {
     await startNewSession()
@@ -46,37 +49,33 @@ async function startNewSession() {
   const wbId = selectedWordbookId.value
   if (wbId == null) return
 
-  const wb = wordbooks.value.find((w) => w.id === wbId)
+  const wb = lsWordbooks.value.find((w) => w.id === wbId)
   store.startSession(wbId, wb?.name || '词书')
 
   await resetSession()
-  allDone.value = false
+  isAllDone.value = false
   resultMsg.value = ''
   resultCorrect.value = null
-  showNextBtn.value = false
+  isShowNext.value = false
   userInput.value = ''
   await fetchNext()
 }
 
 async function fetchNext() {
-  if (!selectedWordbookId.value) return
-  const word = await pickWord(selectedWordbookId.value)
+  const wbId = selectedWordbookId.value
+  if (wbId == null) return
+
+  const word = await pickWord(wbId)
   if (!word) {
-    allDone.value = true
+    isAllDone.value = true
     currentWord.value = null
-    // 自动记录活动
-    await finishSession(
-      selectedWordbookId.value,
-      store.currentWordbookName,
-      store.totalQuestions,
-      store.correctCount,
-    )
+    await finishSession(wbId, store.currentWordbookName, store.totalQuestions, store.correctCount)
     return
   }
   currentWord.value = word
   resultMsg.value = ''
   resultCorrect.value = null
-  showNextBtn.value = false
+  isShowNext.value = false
   userInput.value = ''
 }
 
@@ -84,10 +83,10 @@ async function submitAnswer() {
   if (!currentWord.value || !userInput.value.trim()) return
 
   const res = await checkAnswer(currentWord.value.wordId, userInput.value.trim())
-  resultCorrect.value = res.correct
-  resultMsg.value = res.correct ? '✅ 正确！' : `❌ 错误。正确答案：${res.correctAnswer}`
+  resultCorrect.value = res.isCorrect
+  resultMsg.value = res.isCorrect ? '✅ 正确！' : `❌ 错误。正确答案：${res.correctAnswer}`
 
-  if (res.correct) {
+  if (res.isCorrect) {
     store.recordCorrect()
   } else {
     store.recordWrong(
@@ -97,10 +96,10 @@ async function submitAnswer() {
       userInput.value.trim(),
     )
   }
-  showNextBtn.value = true
+  isShowNext.value = true
 }
 
-async function handleNext() {
+async function goNext() {
   await fetchNext()
 }
 
@@ -112,13 +111,12 @@ function goToResults() {
   router.push('/statistics')
 }
 
-// 键盘快捷键 Enter 提交
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter') {
-    if (!showNextBtn.value && userInput.value.trim()) {
+    if (!isShowNext.value && userInput.value.trim()) {
       submitAnswer()
-    } else if (showNextBtn.value && !allDone.value) {
-      handleNext()
+    } else if (isShowNext.value && !isAllDone.value) {
+      goNext()
     }
   }
 }
@@ -126,7 +124,7 @@ function onKeydown(e: KeyboardEvent) {
 
 <template>
   <div class="study-page" @keydown="onKeydown">
-    <!-- 词书选择（未选择时显示） -->
+    <!-- Wordbook selection -->
     <div v-if="!selectedWordbookId" class="oj-card mb-6">
       <div class="oj-card__header">
         <h3>📚 选择词书</h3>
@@ -134,7 +132,7 @@ function onKeydown(e: KeyboardEvent) {
       <div class="oj-card__body">
         <div class="wordbook-select">
           <button
-            v-for="wb in wordbooks"
+            v-for="wb in lsWordbooks"
             :key="wb.id"
             class="oj-btn"
             :class="selectedWordbookId === wb.id ? 'oj-btn--primary' : 'oj-btn--outline'"
@@ -151,9 +149,9 @@ function onKeydown(e: KeyboardEvent) {
       </div>
     </div>
 
-    <!-- 检测界面 -->
+    <!-- Dictation interface -->
     <div v-else>
-      <!-- 顶部：词书名 + 进度 + 结束检测 -->
+      <!-- Top bar: wordbook name + progress + controls -->
       <div class="oj-card mb-4">
         <div class="oj-card__body flex-between">
           <div>
@@ -166,18 +164,18 @@ function onKeydown(e: KeyboardEvent) {
           <div class="flex-center" style="gap: 8px">
             <button
               class="oj-btn oj-btn--sm"
-              :class="showKeyboard ? 'oj-btn--primary' : 'oj-btn--outline'"
-              @click="showKeyboard = !showKeyboard"
+              :class="isShowKeyboard ? 'oj-btn--primary' : 'oj-btn--outline'"
+              @click="isShowKeyboard = !isShowKeyboard"
             >
-              ⌨️ {{ showKeyboard ? '关闭键盘' : '键盘' }}
+              ⌨️ {{ isShowKeyboard ? '关闭键盘' : '键盘' }}
             </button>
             <button class="oj-btn oj-btn--sm oj-btn--outline" @click="goToResults">结束本轮</button>
           </div>
         </div>
       </div>
 
-      <!-- 全部完成 -->
-      <div class="oj-card" v-if="allDone">
+      <!-- All done -->
+      <div class="oj-card" v-if="isAllDone">
         <div class="oj-card__body text-center" style="padding: 60px 20px">
           <p style="font-size: 48px; margin-bottom: 16px">🎉</p>
           <h2 style="margin-bottom: 8px">本轮完成！</h2>
@@ -192,10 +190,10 @@ function onKeydown(e: KeyboardEvent) {
         </div>
       </div>
 
-      <!-- 答题卡片 -->
+      <!-- Answer card -->
       <div class="oj-card" v-else-if="currentWord">
         <div class="oj-card__body" style="padding: 40px 32px">
-          <!-- 提示区 -->
+          <!-- Prompt -->
           <div class="text-center mb-6">
             <p class="text-muted" style="font-size: 13px; margin-bottom: 4px">请根据中文输入俄文</p>
             <p style="font-size: 28px; font-weight: 700; color: var(--oj-primary)">
@@ -206,19 +204,19 @@ function onKeydown(e: KeyboardEvent) {
             </p>
           </div>
 
-          <!-- 输入区 -->
+          <!-- Input -->
           <div class="input-area">
             <input
               v-model="userInput"
               type="text"
               class="oj-input"
               placeholder="输入俄文单词..."
-              :disabled="showNextBtn"
+              :disabled="isShowNext"
               autofocus
             />
             <button
               class="oj-btn oj-btn--primary oj-btn--lg"
-              :disabled="!userInput.trim() || showNextBtn"
+              :disabled="!userInput.trim() || isShowNext"
               @click="submitAnswer"
               style="margin-top: 16px; width: 100%"
             >
@@ -226,16 +224,16 @@ function onKeydown(e: KeyboardEvent) {
             </button>
           </div>
 
-          <!-- 虚拟键盘 -->
+          <!-- Virtual keyboard -->
           <RussianKeyboard
-            v-if="showKeyboard"
-            :disabled="showNextBtn"
+            v-if="isShowKeyboard"
+            :disabled="isShowNext"
             @input="(char: string) => (userInput += char)"
             @backspace="userInput = userInput.slice(0, -1)"
             @enter="submitAnswer"
           />
 
-          <!-- 结果反馈 -->
+          <!-- Result feedback -->
           <div
             v-if="resultMsg"
             class="result-feedback mt-4"
@@ -245,7 +243,7 @@ function onKeydown(e: KeyboardEvent) {
             <p v-if="resultCorrect === false" class="mt-2 text-secondary">
               你的输入：{{ userInput }}
             </p>
-            <button v-if="showNextBtn" class="oj-btn oj-btn--primary mt-4" @click="handleNext">
+            <button v-if="isShowNext" class="oj-btn oj-btn--primary mt-4" @click="goNext">
               下一题 →
             </button>
           </div>

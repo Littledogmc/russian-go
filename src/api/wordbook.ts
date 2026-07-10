@@ -1,11 +1,11 @@
 /*
- * 词书相关 API
- * GET /api/wordbooks — 获取站点内置词书列表
+ * Wordbook API module.
+ * GET /api/wordbooks — fetch all built-in wordbooks.
  */
 import http from './index'
 import type { WordbookSummary } from '@/types'
 
-export async function fetchWordbooks(): Promise<WordbookSummary[]> {
+export async function getWordbooks(): Promise<WordbookSummary[]> {
   const resp = await http.get<WordbookSummary[]>('/wordbooks')
   return resp.data
 }

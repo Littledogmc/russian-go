@@ -1,7 +1,6 @@
 /*
- * axios 实例配置
- * 统一管理后端 API 的基础路径和请求/响应拦截
- * 开发环境通过 Vite proxy 转发到 localhost:8080
+ * Axios instance config.
+ * Base URL points to /api, proxied to backend by Vite in dev mode.
  */
 import axios from 'axios'
 
