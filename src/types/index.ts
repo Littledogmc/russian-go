@@ -42,3 +42,9 @@ export interface ErrorWord {
   wrongCount: number
   wordbook: string
 }
+
+// Leaderboard entry
+export interface LeaderboardEntry {
+  username: string
+  activityCount: number
+}

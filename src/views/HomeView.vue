@@ -1,20 +1,55 @@
 <script setup lang="ts">
 /*
  * Home page.
- * Shows welcome banner, recent activity, error leaderboard, and built-in wordbook list.
+ * Shows welcome banner, recent activity, error leaderboard, user activity leaderboard,
+ * and built-in wordbook list.
  */
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getWordbooks } from '@/api/wordbook'
-import { getActivities, getErrorWords } from '@/api/study'
-import type { WordbookSummary, ActivityRecord, ErrorWord } from '@/types'
+import { getActivities, getErrorWords, getLeaderboard } from '@/api/study'
+import type { WordbookSummary, ActivityRecord, ErrorWord, LeaderboardEntry } from '@/types'
+
+interface Announcement {
+  id: number
+  title: string
+  content: string
+  date: string
+  author: string
+}
 
 const router = useRouter()
+
+const lsAnnouncements: Announcement[] = [
+  {
+    id: 1,
+    title: '依旧测试，依旧丢数据，依旧前端报错',
+    content: '还没完事儿。有毛病的地方上github拉issue。',
+    date: '2026-07-12',
+    author: 'Broadwell',
+  },
+]
+
+const selectedAnnouncement = ref<Announcement | null>(null)
 
 const lsWordbooks = ref<WordbookSummary[]>([])
 const lsActivities = ref<ActivityRecord[]>([])
 const lsErrorWords = ref<ErrorWord[]>([])
+const lsLeaderboard = ref<LeaderboardEntry[]>([])
 const isLoading = ref(true)
+const isShowLicense = ref(false)
+const licenseContent = ref('')
+
+async function showLicense() {
+  try {
+    const resp = await fetch('/LICENSE')
+    licenseContent.value = await resp.text()
+    isShowLicense.value = true
+  } catch {
+    licenseContent.value = 'MIT License'
+    isShowLicense.value = true
+  }
+}
 
 function calcAccuracy(correct: number, total: number): number {
   if (total === 0) return 0
@@ -35,10 +70,16 @@ function startStudy(wordbookId: number): void {
 
 onMounted(async () => {
   try {
-    const [wb, acts, errs] = await Promise.all([getWordbooks(), getActivities(5), getErrorWords(5)])
+    const [wb, acts, errs, lb] = await Promise.all([
+      getWordbooks(),
+      getActivities(5),
+      getErrorWords(5),
+      getLeaderboard(10),
+    ])
     lsWordbooks.value = wb
     lsActivities.value = acts
     lsErrorWords.value = errs
+    lsLeaderboard.value = lb
   } catch {
     // Silently fail when backend is not running
   } finally {
@@ -63,6 +104,54 @@ onMounted(async () => {
           <button class="oj-btn oj-btn--outline" @click="goStatistics">
             <span>📊</span> 学习统计
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements -->
+    <div class="oj-card mb-6">
+      <div class="oj-card__header">
+        <h3>📢 公告栏</h3>
+      </div>
+      <div class="oj-card__body">
+        <div class="announcement-list">
+          <div
+            v-for="ann in lsAnnouncements"
+            :key="ann.id"
+            class="announcement-item"
+            @click="selectedAnnouncement = ann"
+          >
+            <span class="announcement-tag">📌</span>
+            <span class="announcement-title">{{ ann.title }}</span>
+            <span class="text-muted announcement-date">{{ ann.date }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcement modal -->
+    <div
+      v-if="selectedAnnouncement"
+      class="license-overlay"
+      @click.self="selectedAnnouncement = null"
+    >
+      <div class="oj-card license-modal">
+        <div class="oj-card__header flex-between">
+          <h3>📢 {{ selectedAnnouncement.title }}</h3>
+          <button class="oj-btn oj-btn--sm oj-btn--outline" @click="selectedAnnouncement = null">
+            关闭
+          </button>
+        </div>
+        <div class="oj-card__body">
+          <p
+            style="white-space: pre-wrap; line-height: 1.8; font-size: 14px; color: var(--oj-text)"
+          >
+            {{ selectedAnnouncement.content }}
+          </p>
+          <div class="text-muted mt-4" style="font-size: 13px">
+            <span>{{ selectedAnnouncement.author }}</span>
+            <span style="margin-left: 12px">{{ selectedAnnouncement.date }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -165,6 +254,44 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- User activity leaderboard -->
+    <div class="oj-card mb-6">
+      <div class="oj-card__header">
+        <h3>🏆 今日答题榜</h3>
+        <span style="font-size: 13px; color: var(--oj-text-muted)">按完成检测次数排名</span>
+      </div>
+      <div class="oj-card__body" style="padding: 0">
+        <table class="oj-table" v-if="!isLoading && lsLeaderboard.length > 0">
+          <thead>
+            <tr>
+              <th style="width: 48px">#</th>
+              <th>用户</th>
+              <th style="text-align: right">活动次数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(entry, index) in lsLeaderboard" :key="entry.username">
+              <td class="text-muted" style="font-size: 13px">
+                <span v-if="index === 0">🥇</span>
+                <span v-else-if="index === 1">🥈</span>
+                <span v-else-if="index === 2">🥉</span>
+                <span v-else>{{ index + 1 }}</span>
+              </td>
+              <td style="font-weight: 500">{{ entry.username }}</td>
+              <td style="text-align: right">
+                <span class="oj-badge oj-badge--info">{{ entry.activityCount }} 次</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-else-if="!isLoading" class="empty-state">
+          <p style="font-size: 32px; margin-bottom: 12px">🏆</p>
+          <p>暂无数据</p>
+        </div>
+        <div v-else class="empty-state"><p>加载中...</p></div>
+      </div>
+    </div>
+
     <!-- Built-in wordbook list -->
     <div class="oj-card">
       <div class="oj-card__header">
@@ -205,7 +332,22 @@ onMounted(async () => {
     <!-- Footer -->
     <div class="text-center text-muted" style="padding: 30px 0">
       <p>Copyright (C) Broadwell 2026. All rights reserved.</p>
-      <p>For educational purposes only - Do not distribute!</p>
+      <p><a href="#" class="license-link" @click.prevent="showLicense">Check License</a></p>
+    </div>
+
+    <!-- License modal -->
+    <div v-if="isShowLicense" class="license-overlay" @click.self="isShowLicense = false">
+      <div class="oj-card license-modal">
+        <div class="oj-card__header flex-between">
+          <h3>📄 MIT License</h3>
+          <button class="oj-btn oj-btn--sm oj-btn--outline" @click="isShowLicense = false">
+            关闭
+          </button>
+        </div>
+        <div class="oj-card__body">
+          <pre class="license-text">{{ licenseContent }}</pre>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -237,5 +379,79 @@ onMounted(async () => {
   padding: 40px 20px;
   text-align: center;
   color: var(--oj-text-muted);
+}
+
+.announcement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.announcement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--oj-radius);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.announcement-item:hover {
+  background: var(--oj-table-hover);
+}
+
+.announcement-tag {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.announcement-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--oj-primary);
+  flex: 1;
+}
+
+.announcement-date {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.license-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.license-modal {
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.license-text {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--oj-text-secondary);
+  margin: 0;
+  font-family: var(--oj-font);
+}
+
+.license-link {
+  color: var(--oj-text-muted);
+  text-decoration: none;
+}
+
+.license-link:hover {
+  color: var(--oj-primary);
+  text-decoration: underline;
 }
 </style>

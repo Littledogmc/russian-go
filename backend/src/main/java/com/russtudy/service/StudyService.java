@@ -1,6 +1,7 @@
 /*
  * Study service (multi-user).
  * All per-user data keys are prefixed with user:{userId}: to isolate data between users.
+ * A global leaderboard ZSet tracks activity count per userId.
  */
 package com.russtudy.service;
 
@@ -17,7 +18,9 @@ import com.russtudy.dto.ActivityRecord;
 import com.russtudy.dto.CheckAnswerRequest;
 import com.russtudy.dto.CheckAnswerResponse;
 import com.russtudy.dto.ErrorWordRecord;
+import com.russtudy.dto.LeaderboardEntry;
 import com.russtudy.dto.PickWordResponse;
+import com.russtudy.model.User;
 import com.russtudy.model.Word;
 import com.russtudy.model.Wordbook;
 
@@ -29,6 +32,8 @@ public class StudyService {
 	private static final String K_WB = "wordbook:";
 	private static final String K_WORD = "word:";
 	private static final String K_WB_WORDS = "wordbook:words:";
+	private static final String K_LEADERBOARD = "leaderboard";
+	private static final String K_USER_PREFIX = "user:";
 
 	public StudyService(RedisTemplate<String, Object> redis) {
 		this.redis = redis;
@@ -111,6 +116,9 @@ public class StudyService {
 		);
 		redis.opsForList().leftPush(activitiesKey(userId), record);
 		redis.opsForList().trim(activitiesKey(userId), 0, 49);
+
+		// Increment global leaderboard count for this user
+		redis.opsForZSet().incrementScore(K_LEADERBOARD, String.valueOf(userId), 1);
 	}
 
 	public List<ActivityRecord> getRecentActivities(Long userId, int limit) {
@@ -138,6 +146,19 @@ public class StudyService {
 				score != null ? score.intValue() : 0, wbName
 			);
 		}).filter(o -> o != null).toList();
+	}
+
+	public List<LeaderboardEntry> getLeaderboard(Long requestUserId, int limit) {
+		Set<Object> top = redis.opsForZSet().reverseRangeByScore(K_LEADERBOARD, 0, Double.MAX_VALUE, 0, limit);
+		if (top == null) return List.of();
+
+		return top.stream().map(o -> {
+			String uid = o.toString();
+			Double score = redis.opsForZSet().score(K_LEADERBOARD, uid);
+			Object userObj = redis.opsForValue().get(K_USER_PREFIX + uid);
+			String username = (userObj instanceof User user) ? user.getUsername() : ("User#" + uid);
+			return new LeaderboardEntry(username, score != null ? score.longValue() : 0);
+		}).toList();
 	}
 
 	public void resetForUser(Long userId, Long wordbookId) {

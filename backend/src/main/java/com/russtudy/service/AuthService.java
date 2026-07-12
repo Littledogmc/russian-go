@@ -37,6 +37,7 @@ public class AuthService {
 
 	public AuthResponse register(RegisterRequest req) {
 		String username = req.getUsername().trim().toLowerCase();
+		String email = req.getEmail() != null ? req.getEmail().trim().toLowerCase() : "";
 		if (username.isEmpty() || req.getPassword().length() < 3) {
 			throw new RuntimeException("Username or password too short");
 		}
@@ -46,7 +47,7 @@ public class AuthService {
 
 		Long id = redis.opsForValue().increment(KEY_ID_COUNTER);
 		String hash = encoder.encode(req.getPassword());
-		User user = new User(id, username, hash, ROLE_USER);
+		User user = new User(id, username, hash, email, ROLE_USER);
 
 		redis.opsForValue().set(KEY_USER_PREFIX + id, user);
 		redis.opsForValue().set(KEY_NAME_INDEX + username, String.valueOf(id));

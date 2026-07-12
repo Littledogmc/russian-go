@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /*
  * App shell.
- * Sticky navbar with navigation links, dark-mode toggle, and auth controls.
- * Theme preference persisted in localStorage.
+ * Sticky navbar with navigation links, dark-mode toggle, auth controls, and user profile popup.
  */
 import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
@@ -43,6 +42,20 @@ function doLogout(): void {
   goRouter.push('/login')
 }
 
+function goProfile(): void {
+  goRouter.push('/profile')
+}
+
+const isShowMiniProfile = ref(false)
+
+function showMiniProfile(): void {
+  isShowMiniProfile.value = true
+}
+
+function hideMiniProfile(): void {
+  isShowMiniProfile.value = false
+}
+
 onMounted(() => {
   const saved = localStorage.getItem('russian-go-theme')
   if (saved === 'dark') {
@@ -75,12 +88,30 @@ onMounted(() => {
       <div class="oj-navbar__right">
         <!-- Auth controls -->
         <template v-if="authStore.isLoggedIn">
-          <span
-            class="oj-navbar__link"
-            style="cursor: default; font-size: 13px; color: var(--oj-text-secondary)"
+          <div
+            class="oj-navbar__user-wrap"
+            @mouseenter="showMiniProfile"
+            @mouseleave="hideMiniProfile"
           >
-            {{ authStore.username }}
-          </span>
+            <button class="oj-navbar__user-btn" @click="goProfile">
+              {{ authStore.username }}
+            </button>
+            <!-- Mini profile popup -->
+            <div v-if="isShowMiniProfile" class="mini-profile">
+              <div class="mini-profile__header">
+                <span class="mini-profile__avatar">👤</span>
+                <div>
+                  <p class="mini-profile__name">{{ authStore.username }}</p>
+                  <p class="mini-profile__role">
+                    {{ authStore.isAdmin ? '管理员' : authStore.isBanned ? '已封禁' : '普通用户' }}
+                  </p>
+                </div>
+              </div>
+              <div class="mini-profile__body">
+                <p class="text-muted" style="font-size: 13px">🚧 个人资料功能开发中</p>
+              </div>
+            </div>
+          </div>
           <button class="oj-btn oj-btn--sm oj-btn--outline" @click="doLogout">登出</button>
         </template>
         <template v-else>
@@ -125,5 +156,69 @@ onMounted(() => {
 
 .oj-navbar__theme-btn:hover {
   background: var(--oj-nav-link-hover);
+}
+
+/* User button */
+.oj-navbar__user-wrap {
+  position: relative;
+}
+
+.oj-navbar__user-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: var(--oj-radius);
+  color: var(--oj-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--oj-font);
+  transition: background 0.15s;
+}
+
+.oj-navbar__user-btn:hover {
+  background: var(--oj-nav-link-hover);
+  color: var(--oj-text);
+}
+
+/* Mini profile popup */
+.mini-profile {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 240px;
+  background: var(--oj-card-bg);
+  border: 1px solid var(--oj-card-border);
+  border-radius: var(--oj-radius);
+  box-shadow: var(--oj-shadow);
+  z-index: 200;
+}
+
+.mini-profile__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--oj-card-border);
+}
+
+.mini-profile__avatar {
+  font-size: 28px;
+}
+
+.mini-profile__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--oj-text);
+}
+
+.mini-profile__role {
+  font-size: 12px;
+  color: var(--oj-text-muted);
+  margin-top: 2px;
+}
+
+.mini-profile__body {
+  padding: 14px 16px;
 }
 </style>

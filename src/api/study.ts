@@ -6,9 +6,16 @@
  * finish — persist session stats as an activity record
  * getActivities — fetch recent study activity logs
  * getErrorWords — fetch error leaderboard
+ * getLeaderboard — fetch daily user activity leaderboard
  */
 import http from './index'
-import type { PickWordResult, CheckAnswerResult, ActivityRecord, ErrorWord } from '@/types'
+import type {
+  PickWordResult,
+  CheckAnswerResult,
+  ActivityRecord,
+  ErrorWord,
+  LeaderboardEntry,
+} from '@/types'
 
 export async function pickWord(wordbookId: number): Promise<PickWordResult | null> {
   const resp = await http.post<PickWordResult>('/study/pick', { wordbookId })
@@ -40,5 +47,10 @@ export async function getActivities(limit = 5): Promise<ActivityRecord[]> {
 
 export async function getErrorWords(limit = 5): Promise<ErrorWord[]> {
   const resp = await http.get<ErrorWord[]>('/study/errors', { params: { limit } })
+  return resp.data
+}
+
+export async function getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
+  const resp = await http.get<LeaderboardEntry[]>('/study/leaderboard', { params: { limit } })
   return resp.data
 }

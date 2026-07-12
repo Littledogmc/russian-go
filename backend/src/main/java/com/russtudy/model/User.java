@@ -12,15 +12,17 @@ public class User {
 	private Long id;
 	private String username;
 	private String passwordHash;
+	private String email;
 	private int role;
 	private String createdAt;
 
 	public User() {}
 
-	public User(Long id, String username, String passwordHash, int role) {
+	public User(Long id, String username, String passwordHash, String email, int role) {
 		this.id = id;
 		this.username = username;
 		this.passwordHash = passwordHash;
+		this.email = email;
 		this.role = role;
 		this.createdAt = LocalDateTime.now().toString().substring(0, 19);
 	}
@@ -33,6 +35,9 @@ public class User {
 
 	public String getPasswordHash() { return passwordHash; }
 	public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+	public String getEmail() { return email; }
+	public void setEmail(String email) { this.email = email; }
 
 	public int getRole() { return role; }
 	public void setRole(int role) { this.role = role; }

@@ -48,8 +48,8 @@ export const useAuthStore = defineStore('auth', () => {
     saveAuth(res.token, res.userId, res.username, res.role)
   }
 
-  async function register(usernameVal: string, password: string) {
-    const res = await apiRegister(usernameVal, password)
+  async function register(usernameVal: string, password: string, email: string) {
+    const res = await apiRegister(usernameVal, password, email)
     saveAuth(res.token, res.userId, res.username, res.role)
   }
 

@@ -25,7 +25,12 @@ public class DataInitializer implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) {
-		redis.getConnectionFactory().getConnection().serverCommands().flushAll();
+		// Only insert wordbook data if it doesn't already exist (survives restarts)
+		Long existingCount = redis.opsForSet().size("wordbook:ids");
+		if (existingCount != null && existingCount > 0) {
+			System.out.println(">>> RussianGo: " + existingCount + " wordbooks already exist, skipping init");
+			return;
+		}
 
 		long wbId = 1, wordId = 1;
 

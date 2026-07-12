@@ -15,6 +15,19 @@ const username = ref('')
 const password = ref('')
 const isError = ref(false)
 const errorMsg = ref('')
+const licenseText = ref('')
+const showLicenseModal = ref(false)
+
+async function showLicense() {
+  try {
+    const resp = await fetch('/LICENSE')
+    licenseText.value = await resp.text()
+    showLicenseModal.value = true
+  } catch {
+    licenseText.value = 'MIT License'
+    showLicenseModal.value = true
+  }
+}
 
 async function submitLogin() {
   isError.value = false
@@ -79,16 +92,46 @@ async function submitLogin() {
         <p class="auth-switch">还没有账号？<RouterLink to="/register">立即注册</RouterLink></p>
       </div>
     </div>
+    <!-- Footer -->
+    <div class="auth-footer">
+      <p>
+        Copyright (C) Broadwell 2026.
+        <a href="#" class="license-link" @click.prevent="showLicense">Check License</a>
+      </p>
+    </div>
+
+    <!-- License modal -->
+    <div v-if="showLicenseModal" class="license-overlay" @click.self="showLicenseModal = false">
+      <div class="oj-card license-modal">
+        <div class="oj-card__header flex-between">
+          <h3>MIT License</h3>
+          <button class="oj-btn oj-btn--sm oj-btn--outline" @click="showLicenseModal = false">
+            关闭
+          </button>
+        </div>
+        <div class="oj-card__body">
+          <pre class="license-text">{{ licenseText }}</pre>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .auth-page {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 56px - 48px);
   padding: 20px;
+}
+
+.auth-footer {
+  text-align: center;
+  color: var(--oj-text-muted);
+  padding: 24px 0 12px;
+  font-size: 13px;
 }
 
 .auth-card {
@@ -156,6 +199,43 @@ async function submitLogin() {
   color: var(--oj-text-muted);
   margin-top: 18px;
   font-size: 14px;
+}
+
+.license-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.license-modal {
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.license-text {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--oj-text-secondary);
+  margin: 0;
+  font-family: var(--oj-font);
+}
+
+.license-link {
+  color: var(--oj-text-muted);
+  text-decoration: none;
+}
+
+.license-link:hover {
+  color: var(--oj-primary);
+  text-decoration: underline;
 }
 
 .auth-error {

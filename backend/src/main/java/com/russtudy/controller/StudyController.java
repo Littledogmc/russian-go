@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.russtudy.config.JwtUtil;
 import com.russtudy.dto.CheckAnswerRequest;
 import com.russtudy.dto.FinishSessionRequest;
+import com.russtudy.dto.LeaderboardEntry;
 import com.russtudy.dto.PickWordRequest;
 import com.russtudy.dto.PickWordResponse;
 import com.russtudy.dto.WordbookResponse;
@@ -144,6 +145,20 @@ public class StudyController {
 		try {
 			Long userId = extractUserId(authHeader);
 			return ResponseEntity.ok(studyService.getErrorWords(userId, limit));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	@GetMapping("/study/leaderboard")
+	public ResponseEntity<?> getLeaderboard(
+		@RequestHeader("Authorization") String authHeader,
+		@RequestParam(defaultValue = "10") int limit
+	) {
+		try {
+			Long userId = extractUserId(authHeader);
+			return ResponseEntity.ok(studyService.getLeaderboard(userId, limit));
 		} catch (RuntimeException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 				.body(Map.of("error", e.getMessage()));

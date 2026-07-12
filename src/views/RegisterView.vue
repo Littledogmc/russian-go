@@ -3,7 +3,7 @@
  * Register page.
  * Creates a new account and automatically logs in.
  */
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -11,15 +11,37 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const username = ref('')
+const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const isError = ref(false)
 const errorMsg = ref('')
+
+const isPasswordMatch = computed(() => {
+  return password.value === confirmPassword.value
+})
+
+const isFormValid = computed(() => {
+  return (
+    username.value.length > 0 &&
+    email.value.length > 0 &&
+    password.value.length >= 3 &&
+    isPasswordMatch.value
+  )
+})
 
 async function submitRegister() {
   isError.value = false
   errorMsg.value = ''
+
+  if (!isPasswordMatch.value) {
+    isError.value = true
+    errorMsg.value = 'Passwords do not match'
+    return
+  }
+
   try {
-    await authStore.register(username.value, password.value)
+    await authStore.register(username.value, password.value, email.value)
     router.push('/')
   } catch (err: unknown) {
     isError.value = true
@@ -34,11 +56,7 @@ async function submitRegister() {
     <div class="oj-card auth-card">
       <div class="oj-card__header">
         <div class="auth-brand">
-          <img src="/russian-flag.png" alt="flag" class="auth-flag" />
-          <span>RussianGo</span>
-          <span class="text-muted" style="font-weight: 300; font-size: 14px; margin-left: 6px"
-            >单词自测</span
-          >
+          <span>Здравствуйте!</span>
         </div>
       </div>
       <div class="oj-card__body">
@@ -58,6 +76,19 @@ async function submitRegister() {
             </div>
           </div>
           <div class="auth-field">
+            <label class="auth-label">邮箱</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">📧</span>
+              <input
+                v-model="email"
+                type="email"
+                class="oj-input auth-input"
+                placeholder="请输入邮箱"
+                required
+              />
+            </div>
+          </div>
+          <div class="auth-field">
             <label class="auth-label">密码（至少3位）</label>
             <div class="auth-input-wrap">
               <span class="auth-input-icon">🔒</span>
@@ -70,10 +101,27 @@ async function submitRegister() {
               />
             </div>
           </div>
+          <div class="auth-field">
+            <label class="auth-label">确认密码</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">🔒</span>
+              <input
+                v-model="confirmPassword"
+                type="password"
+                class="oj-input auth-input"
+                :class="{ 'input-mismatch': confirmPassword && !isPasswordMatch }"
+                placeholder="再次输入密码"
+                required
+              />
+            </div>
+            <p v-if="confirmPassword && !isPasswordMatch" class="auth-field-hint">
+              Passwords do not match
+            </p>
+          </div>
           <button
             type="submit"
             class="oj-btn oj-btn--primary oj-btn--lg auth-btn"
-            :disabled="!username || password.length < 3"
+            :disabled="!isFormValid"
           >
             注册
           </button>
@@ -102,15 +150,9 @@ async function submitRegister() {
   display: flex;
   align-items: center;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 900;
+  font-family: 'Microsoft YaHei';
   color: var(--oj-primary);
-}
-
-.auth-flag {
-  height: 18px;
-  width: auto;
-  margin-right: 8px;
-  border-radius: 2px;
 }
 
 .auth-field {
@@ -143,6 +185,16 @@ async function submitRegister() {
   padding-top: 12px !important;
   padding-bottom: 12px !important;
   font-size: 15px !important;
+}
+
+.input-mismatch {
+  border-color: var(--oj-danger) !important;
+}
+
+.auth-field-hint {
+  color: var(--oj-danger);
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 .auth-btn {

@@ -13,8 +13,12 @@ export interface AuthResult {
   role: number
 }
 
-export async function register(username: string, password: string): Promise<AuthResult> {
-  const resp = await http.post<AuthResult>('/auth/register', { username, password })
+export async function register(
+  username: string,
+  password: string,
+  email: string,
+): Promise<AuthResult> {
+  const resp = await http.post<AuthResult>('/auth/register', { username, password, email })
   return resp.data
 }
 
