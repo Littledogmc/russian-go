@@ -1,7 +1,6 @@
 /*
  * Router config.
- * Lazy-loaded routes for all pages.
- * /study and /statistics are guarded: redirect to /login if not authenticated.
+ * All pages except login/register are protected: unauthenticated users are redirected to /login.
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
@@ -23,17 +22,25 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  const protectedRoutes = ['study', 'statistics']
-  if (protectedRoutes.includes(String(to.name))) {
-    const auth = useAuthStore()
-    if (!auth.isLoggedIn) {
-      next({ name: 'login', query: { redirect: to.fullPath } })
+  const openRoutes = ['login', 'register']
+  const auth = useAuthStore()
+
+  if (openRoutes.includes(String(to.name))) {
+    if (auth.isLoggedIn) {
+      next({ name: 'home' })
       return
     }
-    if (auth.isBanned) {
-      next({ name: 'login' })
-      return
-    }
+    next()
+    return
+  }
+
+  if (!auth.isLoggedIn) {
+    next({ name: 'login', query: { redirect: to.fullPath } })
+    return
+  }
+  if (auth.isBanned) {
+    next({ name: 'login' })
+    return
   }
   next()
 })

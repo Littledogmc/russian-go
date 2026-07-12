@@ -403,6 +403,32 @@ body {
   }
 }
 
+/* ========== Input ========== */
+.oj-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 2px solid var(--oj-card-border);
+  border-radius: var(--oj-radius);
+  outline: none;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  background: var(--oj-input-bg);
+  color: var(--oj-text);
+  font-family: var(--oj-font);
+}
+
+.oj-input:focus {
+  border-color: var(--oj-primary);
+  background: var(--oj-input-bg);
+}
+
+.oj-input:disabled {
+  background: #f5f5f5;
+  color: var(--oj-text-muted);
+}
+
 /* ========== Util ========== */
 .text-center {
   text-align: center;

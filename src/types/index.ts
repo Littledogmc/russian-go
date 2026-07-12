@@ -20,7 +20,7 @@ export interface PickWordResult {
 
 // Answer check result from POST /api/study/check
 export interface CheckAnswerResult {
-  isCorrect: boolean
+  correct: boolean
   correctAnswer: string
 }
 

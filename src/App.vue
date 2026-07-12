@@ -5,10 +5,11 @@
  * Theme preference persisted in localStorage.
  */
 import { ref, onMounted } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
 const route = useRoute()
+const goRouter = useRouter()
 const authStore = useAuthStore()
 
 interface NavItem {
@@ -39,6 +40,7 @@ function toggleTheme(): void {
 
 function doLogout(): void {
   authStore.logout()
+  goRouter.push('/login')
 }
 
 onMounted(() => {
@@ -55,7 +57,7 @@ onMounted(() => {
     <div class="oj-navbar__inner">
       <RouterLink to="/" class="oj-navbar__logo">
         <img src="/russian-flag.png" alt="flag" class="oj-navbar__flag" />
-        RussianGo <span> 单词自测 </span>
+        RussianGo
       </RouterLink>
 
       <div class="oj-navbar__links">

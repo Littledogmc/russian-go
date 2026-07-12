@@ -52,7 +52,7 @@ async function startNewSession() {
   const wb = lsWordbooks.value.find((w) => w.id === wbId)
   store.startSession(wbId, wb?.name || '词书')
 
-  await resetSession()
+  await resetSession(wbId)
   isAllDone.value = false
   resultMsg.value = ''
   resultCorrect.value = null
@@ -83,10 +83,10 @@ async function submitAnswer() {
   if (!currentWord.value || !userInput.value.trim()) return
 
   const res = await checkAnswer(currentWord.value.wordId, userInput.value.trim())
-  resultCorrect.value = res.isCorrect
-  resultMsg.value = res.isCorrect ? '✅ 正确！' : `❌ 错误。正确答案：${res.correctAnswer}`
+  resultCorrect.value = res.correct
+  resultMsg.value = res.correct ? '✅ 正确！' : `❌ 错误。正确答案：${res.correctAnswer}`
 
-  if (res.isCorrect) {
+  if (res.correct) {
     store.recordCorrect()
   } else {
     store.recordWrong(

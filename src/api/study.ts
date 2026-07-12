@@ -20,8 +20,8 @@ export async function checkAnswer(wordId: number, userAnswer: string): Promise<C
   return resp.data
 }
 
-export async function resetSession(): Promise<void> {
-  await http.post('/study/reset')
+export async function resetSession(wordbookId: number): Promise<void> {
+  await http.post('/study/reset', { wordbookId })
 }
 
 export async function finishSession(
