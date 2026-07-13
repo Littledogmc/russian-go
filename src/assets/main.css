@@ -37,37 +37,37 @@
   --oj-stat-item-bg: #f5f5f5;
 }
 
-/* Dark mode */
+/* Dark mode — IDE‑style (VS Code Dark+ inspired) */
 [data-theme='dark'] {
-  --oj-bg: #1a1a2e;
-  --oj-nav-bg: #16213e;
-  --oj-nav-border: #0f3460;
-  --oj-card-bg: #16213e;
-  --oj-card-border: #0f3460;
-  --oj-primary: #64b5f6;
-  --oj-primary-hover: #42a5f5;
-  --oj-success: #66bb6a;
-  --oj-danger: #ef5350;
-  --oj-warning: #ffa726;
-  --oj-text: #e0e0e0;
-  --oj-text-secondary: #b0b0b0;
-  --oj-text-muted: #808080;
-  --oj-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --oj-badge-success-bg: #1b5e20;
+  --oj-bg: #1e1e1e;
+  --oj-nav-bg: #252526;
+  --oj-nav-border: #3c3c3c;
+  --oj-card-bg: #252526;
+  --oj-card-border: #3c3c3c;
+  --oj-primary: #569cd6;
+  --oj-primary-hover: #75b8e8;
+  --oj-success: #6a9955;
+  --oj-danger: #f44747;
+  --oj-warning: #d7ba7d;
+  --oj-text: #d4d4d4;
+  --oj-text-secondary: #969696;
+  --oj-text-muted: #6e6e6e;
+  --oj-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --oj-badge-success-bg: rgba(106, 153, 85, 0.25);
   --oj-badge-success-text: #a5d6a7;
-  --oj-badge-danger-bg: #b71c1c;
+  --oj-badge-danger-bg: rgba(244, 71, 71, 0.25);
   --oj-badge-danger-text: #ef9a9a;
-  --oj-badge-warning-bg: #e65100;
+  --oj-badge-warning-bg: rgba(215, 186, 125, 0.25);
   --oj-badge-warning-text: #ffcc80;
-  --oj-badge-info-bg: #0d47a1;
-  --oj-badge-info-text: #90caf9;
-  --oj-table-hover: #1a1a2e;
-  --oj-nav-link-hover: #0f3460;
-  --oj-nav-link-active-bg: #1a237e;
-  --oj-input-bg: #0f3460;
-  --oj-result-correct-bg: #1b5e20;
-  --oj-result-wrong-bg: #b71c1c;
-  --oj-stat-item-bg: #0f3460;
+  --oj-badge-info-bg: rgba(86, 156, 214, 0.25);
+  --oj-badge-info-text: #83a9c9;
+  --oj-table-hover: #2a2d2e;
+  --oj-nav-link-hover: #37373d;
+  --oj-nav-link-active-bg: #37373d;
+  --oj-input-bg: #3c3c3c;
+  --oj-result-correct-bg: rgba(106, 153, 85, 0.15);
+  --oj-result-wrong-bg: rgba(244, 71, 71, 0.15);
+  --oj-stat-item-bg: #2d2d2d;
   --oj-font:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }

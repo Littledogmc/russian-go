@@ -3,7 +3,7 @@
  * App shell.
  * Sticky navbar with navigation links, dark-mode toggle, auth controls, and user profile popup.
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -17,12 +17,18 @@ interface NavItem {
   label: string
 }
 
-const lsNavLinks: NavItem[] = [
-  { path: '/', name: 'home', label: '首页' },
-  { path: '/study', name: 'study', label: '开始检测' },
-  { path: '/statistics', name: 'statistics', label: '学习统计' },
-  { path: '/updates', name: 'updates', label: '更新日志' },
-]
+const lsNavLinks = computed<NavItem[]>(() => {
+  const links: NavItem[] = [
+    { path: '/', name: 'home', label: '首页' },
+    { path: '/study', name: 'study', label: '开始检测' },
+    { path: '/statistics', name: 'statistics', label: '学习统计' },
+    { path: '/updates', name: 'updates', label: '更新日志' },
+  ]
+  if (authStore.isAdmin) {
+    links.push({ path: '/dashboard', name: 'dashboard', label: '管理后台' })
+  }
+  return links
+})
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'
@@ -30,11 +36,18 @@ function isActive(path: string): boolean {
 }
 
 const isDark = ref(false)
+const isUserManuallySet = ref(false)
+
+function applyTheme(dark: boolean): void {
+  isDark.value = dark
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+}
 
 function toggleTheme(): void {
-  isDark.value = !isDark.value
-  localStorage.setItem('russian-go-theme', isDark.value ? 'dark' : 'light')
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+  isUserManuallySet.value = true
+  const isNextDark = !isDark.value
+  localStorage.setItem('russian-go-theme', isNextDark ? 'dark' : 'light')
+  applyTheme(isNextDark)
 }
 
 function doLogout(): void {
@@ -58,10 +71,21 @@ function hideMiniProfile(): void {
 
 onMounted(() => {
   const saved = localStorage.getItem('russian-go-theme')
-  if (saved === 'dark') {
-    isDark.value = true
-    document.documentElement.setAttribute('data-theme', 'dark')
+  if (saved !== null) {
+    isUserManuallySet.value = true
+    applyTheme(saved === 'dark')
+    return
   }
+  // Follow system preference when no manual setting
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
+  applyTheme(prefersDark.matches)
+
+  // Auto-follow system changes unless user has manually toggled
+  prefersDark.addEventListener('change', (event: MediaQueryListEvent) => {
+    if (!isUserManuallySet.value) {
+      applyTheme(event.matches)
+    }
+  })
 })
 </script>
 

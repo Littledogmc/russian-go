@@ -9,6 +9,9 @@ import { useRouter } from 'vue-router'
 import { getWordbooks } from '@/api/wordbook'
 import { getActivities, getErrorWords, getLeaderboard } from '@/api/study'
 import type { WordbookSummary, ActivityRecord, ErrorWord, LeaderboardEntry } from '@/types'
+import { useAuthStore } from '@/stores/authStore'
+
+const authStore = useAuthStore()
 
 interface Announcement {
   id: number
@@ -94,10 +97,7 @@ onMounted(async () => {
     <div class="oj-card mb-6">
       <div class="welcome-banner">
         <div class="welcome-banner__text">
-          <h1>你好！今天想学点什么？</h1>
-          <p class="text-secondary mt-2">
-            站点已内置 <strong>{{ lsWordbooks.length }}</strong> 本词书
-          </p>
+          <h1 style="font-size: 36px; font-weight: 600">Привет, {{ authStore.username }}!</h1>
         </div>
         <div class="welcome-banner__actions">
           <button class="oj-btn oj-btn--primary" @click="goStudy"><span>▶</span> 开始检测</button>
@@ -111,7 +111,7 @@ onMounted(async () => {
     <!-- Announcements -->
     <div class="oj-card mb-6">
       <div class="oj-card__header">
-        <h3>📢 公告栏</h3>
+        <h3>公告栏</h3>
       </div>
       <div class="oj-card__body">
         <div class="announcement-list">
@@ -160,7 +160,7 @@ onMounted(async () => {
       <!-- Recent activity -->
       <div class="oj-card">
         <div class="oj-card__header">
-          <h3>📋 近期测试活动</h3>
+          <h3>近期测试活动</h3>
           <RouterLink to="/statistics" class="oj-btn oj-btn--sm oj-btn--outline"
             >查看全部</RouterLink
           >
@@ -212,7 +212,7 @@ onMounted(async () => {
       <!-- Error leaderboard -->
       <div class="oj-card">
         <div class="oj-card__header">
-          <h3>❌ 高频错词榜</h3>
+          <h3>高频错词榜</h3>
           <span class="oj-badge oj-badge--danger" v-if="lsErrorWords.length > 0"
             >{{ lsErrorWords.length }} 词需巩固</span
           >
@@ -257,8 +257,7 @@ onMounted(async () => {
     <!-- User activity leaderboard -->
     <div class="oj-card mb-6">
       <div class="oj-card__header">
-        <h3>🏆 今日答题榜</h3>
-        <span style="font-size: 13px; color: var(--oj-text-muted)">按完成检测次数排名</span>
+        <h3>卷王</h3>
       </div>
       <div class="oj-card__body" style="padding: 0">
         <table class="oj-table" v-if="!isLoading && lsLeaderboard.length > 0">
@@ -295,7 +294,7 @@ onMounted(async () => {
     <!-- Built-in wordbook list -->
     <div class="oj-card">
       <div class="oj-card__header">
-        <h3>📚 选择词书</h3>
+        <h3>选择词书</h3>
         <span style="font-size: 13px; color: var(--oj-text-muted)"
           >站点内置共 {{ lsWordbooks.length }} 本</span
         >
@@ -339,7 +338,7 @@ onMounted(async () => {
     <div v-if="isShowLicense" class="license-overlay" @click.self="isShowLicense = false">
       <div class="oj-card license-modal">
         <div class="oj-card__header flex-between">
-          <h3>📄 MIT License</h3>
+          <h3>MIT License</h3>
           <button class="oj-btn oj-btn--sm oj-btn--outline" @click="isShowLicense = false">
             关闭
           </button>

@@ -13,6 +13,7 @@ com\russtudy\controller\AuthController.class
 com\russtudy\RusStudyApplication.class
 com\russtudy\dto\WordbookResponse.class
 com\russtudy\dto\ErrorWordRecord.class
+com\russtudy\controller\AdminController.class
 com\russtudy\dto\LoginRequest.class
 com\russtudy\dto\ActivityRecord.class
 com\russtudy\config\RedisConfig.class

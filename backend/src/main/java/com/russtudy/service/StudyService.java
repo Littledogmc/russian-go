@@ -39,6 +39,10 @@ public class StudyService {
 		this.redis = redis;
 	}
 
+	public RedisTemplate<String, Object> getRedis() {
+		return redis;
+	}
+
 	private String answeredKey(Long userId, Long wbId) {
 		return "user:" + userId + ":session:answered:" + wbId;
 	}

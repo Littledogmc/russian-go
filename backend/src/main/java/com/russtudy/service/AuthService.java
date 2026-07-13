@@ -28,6 +28,7 @@ public class AuthService {
 	private static final String KEY_USER_PREFIX = "user:";
 	private static final String KEY_NAME_INDEX = "user:name:";
 	private static final String KEY_ID_COUNTER = "user:id_counter";
+	private static final String KEY_USER_IDS = "user:ids";
 
 	public AuthService(RedisTemplate<String, Object> redis, JwtUtil jwtUtil) {
 		this.redis = redis;
@@ -51,6 +52,7 @@ public class AuthService {
 
 		redis.opsForValue().set(KEY_USER_PREFIX + id, user);
 		redis.opsForValue().set(KEY_NAME_INDEX + username, String.valueOf(id));
+		redis.opsForSet().add(KEY_USER_IDS, String.valueOf(id));
 
 		String token = jwtUtil.generateToken(id, username);
 		return new AuthResponse(token, id, username, ROLE_USER);

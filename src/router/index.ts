@@ -19,6 +19,11 @@ const router = createRouter({
     { path: '/login', name: 'login', component: () => import('../views/LoginView.vue') },
     { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue') },
     { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue') },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: () => import('../views/DashboardView.vue'),
+    },
   ],
 })
 
@@ -41,6 +46,10 @@ router.beforeEach((to, _from, next) => {
   }
   if (auth.isBanned) {
     next({ name: 'login' })
+    return
+  }
+  if (to.name === 'dashboard' && !auth.isAdmin) {
+    next({ name: 'home' })
     return
   }
   next()

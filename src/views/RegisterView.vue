@@ -56,7 +56,7 @@ async function submitRegister() {
     <div class="oj-card auth-card">
       <div class="oj-card__header">
         <div class="auth-brand">
-          <span>Здравствуйте!</span>
+          <span style="text-align: center">Здравствуйте.</span>
         </div>
       </div>
       <div class="oj-card__body">
